@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# rename input parameters
+DIRIN=$1
+BMPIN=$2
+BMPSIZE=$3
+DIROUT=$4
+
+# convert bmp to raw
+echo "Converting ${BMPIN} to raw."
+../python/img2raw.py $DIRIN/$BMPIN
+
+# convert raw to nc
+# get base file name
+filename=$(basename $BMPIN)
+filename="${filename%.*}"
+echo "Converting ${filename}.raw to .nc."
+../bin/nctomofromraw $DIRIN/$filename.raw $DIRIN/$filename.nc $BMPSIZE
+
+# submit to persistence pairs and save output
+echo "Running diamorse on ${filename}.nc."
+PYTHONPATH=../bin ../python/persistence.py -r $DIRIN/$filename.nc > $DIROUT/$filename.txt
+
+
+
+
+
