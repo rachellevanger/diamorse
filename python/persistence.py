@@ -4,8 +4,8 @@ import sys
 from MorseAnalysis import VolumeImage, VectorField
 
 
-infinity = float('inf')
-
+#infinity = float('inf')
+infinity = -1
 
 def fromVolumeFile(filename, options):
     img = VolumeImage(filename)
@@ -13,12 +13,16 @@ def fromVolumeFile(filename, options):
                         threshold = options.threshold,
                         filename = options.field)
 
+    if options.morse:
+        printMorseBoundary(morse, img)
+
     dim = lambda v: img.cellDimension(v)
     val = lambda v: img.scalarForCell(v) if v else infinity
+    idx = lambda v: img.index(v) if v else -1
 
     weights = dict((tuple(v), x) for v, x in morse.weights())
 
-    return tuple((val(v), val(w), dim(v), v, w, weights.get(tuple(v), 0))
+    return tuple((val(v), val(w), dim(v), idx(v), v, idx(w), w, weights.get(tuple(v), 0))
                  for v, w in morse.birthsAndDeaths())
 
 
@@ -54,15 +58,18 @@ def fromTextFile(filename):
 
 
 def toText(output, pairs, source):
-    output.write("# Persistence pairs for %s\n" % (source,))
-    output.write("#   format: ")
-    output.write("<birth> <death> <dimension> <creator xyz> <destructor xyz> ")
-    output.write("<weight>\n")
-    for birth, death, dim, v, w, wt in pairs:
-        w = w or '---'
+    #output.write("# Persistence pairs for %s\n" % (source,))
+    #output.write("#   format: ")
+    #output.write("<birth> <death> <dimension> <creator xyz> <destructor xyz> ")
+    #output.write("<weight>\n")
+    
+    output.write("birth,death,dim,b_idx,b_x,b_y,b_z,d_idx,d_x,d_y,d_z,weight\n")
+
+    for birth, death, dim, i, v, j, w, wt in pairs:
+        w = w or '000'
         output.write(
-            "% 14.10f % 14.10f %d    % 6s % 6s % 6s    % 6s % 6s % 6s   %d\n" %
-            (birth, death, dim, v[0], v[1], v[2], w[0], w[1], w[2], wt))
+            "% 14.10f, % 14.10f, %d, %s, % 6s, % 6s, % 6s, %s, % 6s, % 6s, % 6s, % d\n" %
+            (birth, death, dim, i, v[0], v[1], v[2], j, w[0], w[1], w[2], wt))
 
 
 def toTextFile(filename, pairs, source):
@@ -143,8 +150,21 @@ def printStats(pairs):
         print ("# Numbers of cells of dimension " + str(d) +
                " by lower persistence thresholds")
         for x in sorted(counts.keys()):
-            print "%10.5f %6d" % (x, counts[x])
+            print ("%10.5f %6d" % (x, counts[x]))
         print
+
+
+def printMorseBoundary(morse, img):
+    criticalData = morse.criticalCellsAllInfo()
+
+    dim = lambda v: str(img.cellDimension(v))
+
+    for i, c in criticalData:
+	print ('cell_idx,cell_dim,cell_x,cell_y,cell_z,bnd_idx,bnd_dim,bnd_x,bnd_y,bnd_z\n')
+        # Print the critical cells in the boundary
+	for j, b in morse.chainBoundary(c):
+	    print (str(i) + ", " + dim(c) + ', ' + ','.join(map(str, c)) + ", " + str(j) + ", " + dim(b) + ', ' + ",".join(map(str,b)) )
+
 
 
 if __name__ == '__main__':
@@ -164,6 +184,10 @@ if __name__ == '__main__':
                       action = "store_true", help = "output persistence pairs")
     parser.add_option("-s", "--stats", dest = "stats", default = False,
                       action = "store_true", help = "output some statistics")
+    parser.add_option("-m", "--morse", dest = "morse", default = False,
+                      action = "store_true", help = "output morse adjacency list")
+    parser.add_option("-c", "--critical", dest = "critical", default = False,
+		      action = "store_true", help = "output morse critical cells")
     (options, args) = parser.parse_args()
     if len(args) < 1:
         parser.error("expected at least one argument")
@@ -185,7 +209,11 @@ if __name__ == '__main__':
 
     if options.betti:
         for i in range(len(xth)):
-            print "# The %f-persistent %s Betti numbers:" % (threshold, xth[i])
+            print ("# The %f-persistent %s Betti numbers:" % (threshold, xth[i]))
             for (val, count) in bettiNumbers(pairs, i, threshold):
-                print "%10.5f %6d" % (val, count)
+                print ("%10.5f %6d" % (val, count))
             print
+
+
+
+

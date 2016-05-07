@@ -30,7 +30,9 @@ int main(int argc, char* argv[])
     char* infile = argv[1];
     char* outfile = argv[2];
 
+
     std::ifstream instream(infile, std::ifstream::binary);
+
 
     instream.seekg(0, instream.end);
     int length = instream.tellg();
@@ -39,17 +41,29 @@ int main(int argc, char* argv[])
     boost::shared_ptr<std::vector<uint8_t> >
         indata(new std::vector<uint8_t>(length));
 
+
     instream.read((char*) &(indata->at(0)), length);
 
     boost::shared_ptr<std::vector<float_t> >
         outdata(new std::vector<float_t>(length));
 
-    for (int i = 0; i < length; ++i)
-        (*outdata)[i] = (*indata)[i];
+    int number = length;
+    int digits = 1; 
+    while (number != 0) { number /= 10; digits++; }
+
+    for (int i = 0; i < length; ++i) {
+        (*outdata)[i] = (*indata)[i]; // Add a tiny amount for the index number to make every pixel unique
+    }	
+
+    for (int i = 0; i < length; ++i) {
+	(*outdata)[i] = (*outdata)[i] + i*pow(10,-1*digits);
+    }
 
     int xdim = atoi(argv[3]);
     int ydim = argc > 4 ? atoi(argv[4]) : length / xdim;
     int zdim = length / (xdim * ydim);
+
+    std::cout << "Writing data...\n";
 
     writeVolumeData(outdata, outfile, "tomo_float", xdim, ydim, zdim);
 }

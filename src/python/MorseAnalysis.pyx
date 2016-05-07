@@ -92,6 +92,8 @@ cdef class VolumeImage:
     def scalarForCell(self, vector[float] pos):
         return self._img.cellValue(self._img.cellAtPosition(pos))
 
+    def index(self, vector[float] pos):
+        return self._img.cellAtPosition(pos)
 
 cdef class VectorField:
     cdef VolumeImage _volume
@@ -147,6 +149,15 @@ cdef class VectorField:
         for i in range(self._morse.chainComplexSize()):
             yield self._volume._img.positionForCell(
                 self._morse.chainComplexCell(i))
+
+    def criticalCellsAllInfo(self):
+        cdef size_t i
+
+        for i in range(self._morse.chainComplexSize()):
+            yield (self._morse.chainComplexCell(i),
+			self._volume._img.positionForCell(
+                	self._morse.chainComplexCell(i))
+			)
 
     def basinMap(self):
         cdef int xdim = self._volume._img.xdim()
@@ -251,7 +262,7 @@ cdef class VectorField:
         cdef size_t i
 
         for i in range(cells.size()):
-            yield self._volume._img.positionForCell(cells.at(i))
+            yield ( cells.at(i),  self._volume._img.positionForCell(cells.at(i))  )
 
     def birthsAndDeaths(self):
         cdef ImageData[float] * img = self._volume._img

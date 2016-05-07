@@ -19,7 +19,9 @@ echo "Converting ${filename}.raw to .nc."
 
 # submit to persistence pairs and save output
 echo "Running diamorse on ${filename}.nc."
-PYTHONPATH=../bin ../python/persistence.py -r $DIRIN/$filename.nc > $DIROUT/$filename.txt
+PYTHONPATH=../bin ../python/persistence.py -r $DIRIN/$filename.nc > $DIROUT/${filename}_persistence.csv
+
+PYTHONPATH=../bin ../python/persistence.py -m $DIRIN/$filename.nc > $DIROUT/${filename}_boundary.csv
 
 
 

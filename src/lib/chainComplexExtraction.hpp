@@ -24,7 +24,7 @@ namespace anu_am
 namespace diamorse
 {
 
-
+typedef CubicalComplex::cell_id_type Cell;
 
 template<class Field, class Vectors, class Incidences>
 boost::shared_ptr<std::vector<bool> >
@@ -103,6 +103,8 @@ chainComplex(CubicalComplex const& complex, Field const& field)
 
     return result;
 }
+
+
 
 
 
